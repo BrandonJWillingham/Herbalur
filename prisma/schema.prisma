@@ -1,0 +1,136 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Product {
+  id          String @id @default(cuid())
+  name        String
+  slug        String @unique
+  category    String
+  buzzWords   String
+  description String
+  price       Int // store in cents
+  inventory   Int
+  imageUrl    String
+
+  details     ProductDetail?
+  reviews     Review[]
+  ingredients Ingredient[]
+  cartItems   CartItem[]
+  orderItems  OrderItem[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ProductDetail {
+  id        String @id @default(cuid())
+  productId String @unique
+
+  highlight1 String
+  highlight2 String
+  highlight3 String
+  howToUse   String
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model Ingredient {
+  id        String @id @default(cuid())
+  productId String
+
+  name        String
+  description String
+  imageUrl    String?
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  productId String
+
+  name      String
+  rating    Int
+  comment   String
+  approved  Boolean  @default(false)
+
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model User {
+  id        String @id @default(cuid())
+  email     String @unique
+  username  String?
+  password  String?
+
+  carts     Cart[]
+  orders    Order[]
+
+  createdAt DateTime @default(now())
+}
+
+model Cart {
+  id        String @id @default(cuid())
+  userId    String?
+
+  purchased Boolean @default(false)
+
+  user      User? @relation(fields: [userId], references: [id])
+  items     CartItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CartItem {
+  id        String @id @default(cuid())
+  cartId    String
+  productId String
+
+  quantity  Int @default(1)
+
+  cart      Cart @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id])
+}
+
+model Order {
+  id        String @id @default(cuid())
+  userId    String?
+
+  status    String @default("pending")
+  total     Int
+
+  stripeCheckoutSessionId String?
+  stripePaymentIntentId   String?
+
+  user      User? @relation(fields: [userId], references: [id])
+  items     OrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model OrderItem {
+  id        String @id @default(cuid())
+  orderId   String
+  productId String
+
+  name      String
+  price     Int
+  quantity  Int
+
+  order     Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id])
+}
