@@ -59,7 +59,9 @@ model Ingredient {
 model Review {
   id        String   @id @default(cuid())
   productId String
-
+  
+  subject   String
+  pfpUrl    String
   name      String
   rating    Int
   comment   String
