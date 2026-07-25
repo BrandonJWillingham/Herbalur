@@ -42,7 +42,9 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <Header/>
-        {children}
+        <main className="pt-[99px] lg:pt-[131px]">
+          {children}
+        </main>
         <Footer/>
         </body>
     </html>

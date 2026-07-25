@@ -1,4 +1,4 @@
-import Star from "@/assets/icons/Star.svg"
+import Image from "next/image";
 import ProgressBar from "@/components/sections/productpage/reviewProgressBar"
 
 type ReviewGraphProps = {
@@ -13,8 +13,9 @@ export default function ReviewGraph( {reviews}: ReviewGraphProps) {
     return (
         <div>
             {ratingCounts.map((count : number, index: number) => (
-                <div key={index}>
-                    <span>{index + 1} <Star /></span>
+                <div key={index} className="flex items-center flex-row align-items m-3 gap-2">
+                    <span className="text-lg flex flex-row m-1">{index + 1} </span>
+                    <Image src="/icons/Star.svg" alt="" width={18} height={18} />
                     <ProgressBar percentage={(count / reviews.length) * 100} />
                 </div>
             ))}

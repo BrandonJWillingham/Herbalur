@@ -1,32 +1,34 @@
-import CallToActionCard from "../../cards/CallToActionCard"
+import CallToActionCard from "@/components/cards/CallToActionCard";
 
-export default function HomepageCallToAction () {
+export default function HomepageCallToAction() {
+  return (
+    <section className="bg-[#f8f5ef] py-20">
+      <div className="mx-auto grid max-w-7xl gap-6 px-6 lg:grid-cols-3">
+        <CallToActionCard
+          href="/body"
+          backgroundImage="/images/products/body.png"
+          title="Body"
+          subtitle="Nourish. Hydrate. Glow."
+          description="Care that goes beyond clean—made to deeply nourish and restore."
+          dark
+        />
 
-    return(
-        <section>
-            <div>
-                <CallToActionCard 
-                href="/Body"
-                backgroundImageSrc="/images/body.jpg"
-                subHeader="Nurish. Hydrate. Glow"
-                description="care that goes beyond clean <br/> made to deeply nourish and restore"
-                type="Body"
-                />
-                <CallToActionCard 
-                href="/Skincare"
-                backgroundImageSrc="/images/face.jpg"
-                subHeader="Radiant. Rejuvenate. Revive"
-                description="skincare solutions for a refreshed complexion"
-                type="Skincare"
-                />
-                <CallToActionCard 
-                href="/Hair"
-                backgroundImageSrc="/images/hair.jpg"
-                subHeader="Strengthen. Shine. Flourish"
-                description="haircare that promotes healthy growth and vibrant shine"
-                type="Hair"
-                />
-            </div>
-        </section>
-    )
+        <CallToActionCard
+          href="/hair"
+          backgroundImage="/images/products/hair.png"
+          title="Hair"
+          subtitle="Stronger. Healthier. Naturally."
+          description="Formulated with plant-powered ingredients to support healthy growth."
+        />
+
+        <CallToActionCard
+          href="/skincare"
+          backgroundImage="/images/products/face.png"
+          title="Skincare"
+          subtitle="Clean. Gentle. Effective."
+          description="Skincare that works with your skin—not against it."
+        />
+      </div>
+    </section>
+  );
 }
