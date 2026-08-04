@@ -22,7 +22,7 @@ export default function HomepageCallToAction() {
         />
 
         <CallToActionCard
-          href="/skincare"
+          href="/face"
           backgroundImage="/images/products/face.png"
           title="Skincare"
           subtitle="Clean. Gentle. Effective."
