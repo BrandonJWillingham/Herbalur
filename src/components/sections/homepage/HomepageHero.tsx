@@ -19,7 +19,7 @@ export default function HomepageHero() {
             loop
             muted
             playsInline
-            src="/videos/heroMuted.mP4"
+            src="/videos/heroMuted.mp4"
             preload="auto"
             aria-hidden="true"
             className="h-full w-full object-fill object-right"
@@ -172,9 +172,6 @@ export default function HomepageHero() {
           />
 
           <div className="absolute bottom-6 right-6 max-w-xs text-right text-white">
-            <p className="font-serif text-xl">
-              Turmeric and Kojic Acid Soap
-            </p>
 
             <p className="mt-1 text-xs text-white/85">
               Herbalur oils designed to enrich melanin-rich skin

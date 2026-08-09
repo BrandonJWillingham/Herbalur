@@ -18,8 +18,8 @@ const footerGroups: FooterGroup[] = [
     links: [
       { label: "Body", href: "/body" },
       { label: "Hair", href: "/hair" },
-      { label: "Skincare", href: "/skincare" },
-      { label: "Bundles", href: "/bundles" },
+      { label: "Skincare", href: "/face" },
+      // { label: "Bundles", href: "/bundles" },
     ],
   },
   {
@@ -88,13 +88,6 @@ export default function Footer() {
                 label="Visit Herbalur on Facebook"
               >
                 <FacebookIcon />
-              </SocialLink>
-
-              <SocialLink
-                href="https://www.pinterest.com/Herbalur"
-                label="Visit Herbalur on Pinterest"
-              >
-                <PinterestIcon />
               </SocialLink>
             </div>
           </div>
