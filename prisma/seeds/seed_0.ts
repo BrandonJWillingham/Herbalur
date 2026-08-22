@@ -1,4 +1,4 @@
-import { prisma } from "../src/lib/prisma";
+import { prisma } from "../../src/lib/prisma";
 
 type SeedProduct = {
   name: string;
@@ -475,76 +475,6 @@ const products: SeedProduct[] = [
         name: "Castor Oil",
         description:
           "A thick plant oil that helps seal in moisture and condition hair.",
-      },
-    ],
-  },
-  {
-    name: "After Renewal Face Serum",
-    slug: "after-renewal-face-serum",
-    category: "face",
-    buzzWords: "Smooth • Renew • Refine",
-    description:
-      "A concentrated nighttime face serum designed to support smoother-looking texture and a refreshed, renewed complexion.",
-    price: 2800,
-    inventory: 15,
-    imageUrl: "/images/products/after-renewal-face-serum.webp",
-    details: {
-      highlight1: "Supports smoother-looking texture",
-      highlight2: "Designed for gradual nighttime use",
-      highlight3: "Pairs with the After Dark Renewal Cream",
-      howToUse:
-        "Apply two to three drops to clean, dry skin at night before moisturizer. Begin two nights per week and increase gradually as tolerated. Use daytime sunscreen. Do not combine with other strong exfoliating or retinoid products unless professionally advised.",
-    },
-    ingredients: [
-      {
-        name: "Retinol",
-        description:
-          "A vitamin A derivative commonly used to support visible skin renewal and smoother-looking texture.",
-      },
-      {
-        name: "Squalane",
-        description:
-          "A lightweight emollient that helps cushion and soften the skin.",
-      },
-      {
-        name: "Vitamin E",
-        description:
-          "An antioxidant that helps condition the skin and support the oil-based formula.",
-      },
-    ],
-  },
-  {
-    name: "Rose Dew Face Cleanser",
-    slug: "rose-dew-face-cleanser",
-    category: "face",
-    buzzWords: "Fresh • Gentle • Radiant",
-    description:
-      "A refreshing rose-inspired facial cleanser that removes everyday buildup while helping skin feel clean, soft, and comfortable.",
-    price: 1600,
-    inventory: 24,
-    imageUrl: "/images/products/rose-dew-face-cleanser.webp",
-    details: {
-      highlight1: "Gentle daily cleansing for the face",
-      highlight2: "Fresh rose-inspired sensory experience",
-      highlight3: "Leaves skin ready for hydration",
-      howToUse:
-        "Apply to damp skin and massage gently for 30 to 60 seconds. Rinse thoroughly with lukewarm water and pat dry.",
-    },
-    ingredients: [
-      {
-        name: "Rose Water",
-        description:
-          "A floral water used to provide a fresh, soothing sensory experience.",
-      },
-      {
-        name: "Aloe Vera",
-        description:
-          "Helps maintain a calm and comfortable skin feel during cleansing.",
-      },
-      {
-        name: "Vegetable Glycerin",
-        description:
-          "A humectant that helps support moisture at the skin's surface.",
       },
     ],
   },

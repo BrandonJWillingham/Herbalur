@@ -74,7 +74,7 @@ export default function HomepageAboutUs() {
           <figure className="relative overflow-hidden rounded-[28px] bg-[#eadfce] shadow-[0_18px_45px_rgba(72,57,42,0.10)]">
             <div className="relative aspect-[4/3] w-full sm:aspect-[16/11] lg:aspect-[5/4]">
               <Image
-                src="/images/ingredients/naturalIngredient.png"
+                src="/images/ingredients/naturalIngredient.webp"
                 alt="Fresh ginger roots, sliced ginger, and ground ginger powder beside an open metal container"
                 fill
                 sizes="(max-width: 1024px) 100vw, 50vw"

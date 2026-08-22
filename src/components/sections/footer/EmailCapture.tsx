@@ -6,6 +6,7 @@ import {
   subscribeToNewsletter,
   type NewsletterState,
 } from "@/app/actions/newsletter";
+import { trackEvent } from "@/components/AnalyticsTracker";
 
 const initialState: NewsletterState = {
   success: false,
@@ -97,6 +98,11 @@ export default function EmailCapture() {
             <button
               type="submit"
               disabled={pending}
+              onClick={() =>
+                trackEvent("NEWSLETTER_CLICK", {
+                  location: "footer",
+                })
+              }
               className="
                 h-13 shrink-0 rounded-sm bg-[#f7f1e8] px-8
                 text-xs font-semibold uppercase tracking-[0.16em]

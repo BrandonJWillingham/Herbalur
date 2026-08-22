@@ -239,7 +239,7 @@ export default async function CategoryPage({
                   <div
                     className="
                       relative
-                      aspect-[4/5]
+                      aspect-[1/1]
                       overflow-hidden
                       rounded-[1.25rem]
                       border
@@ -258,13 +258,13 @@ export default async function CategoryPage({
                         25vw
                       "
                       className="
-                        object-contain
-                        p-8
+                        object-fill
                         transition
                         duration-500
                         ease-out
                         group-hover:scale-[1.04]
-                        sm:p-10
+                        sm:p-3
+                        rounded-[1.25rem]
                       "
                     />
 

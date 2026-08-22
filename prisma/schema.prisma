@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
@@ -13,132 +8,161 @@ datasource db {
 }
 
 model Product {
-  id          String @id @default(cuid())
+  id          String         @id @default(cuid())
   name        String
-  slug        String @unique
+  slug        String         @unique
   category    String
   buzzWords   String
   description String
-  price       Int // store in cents
+  price       Int
   inventory   Int
   imageUrl    String
-
-  details     ProductDetail?
-  reviews     Review[]
-  ingredients Ingredient[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
   cartItems   CartItem[]
   orderItems  OrderItem[]
-
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  details     ProductDetail?
+  reviews     Review[]
+  ingredients Ingredient[]   @relation("IngredientToProduct")
 }
 
 model ProductDetail {
-  id        String @id @default(cuid())
-  productId String @unique
-
+  id         String  @id @default(cuid())
+  productId  String  @unique
   highlight1 String
   highlight2 String
   highlight3 String
-  howToUse   String
-
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  howToUse   String?
+  product    Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 }
 
 model Ingredient {
-  id        String @id @default(cuid())
-  productId String
-
-  name        String
+  id          String    @id @default(cuid())
+  name        String    @unique
   description String
   imageUrl    String?
-
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  products    Product[] @relation("IngredientToProduct")
 }
 
 model Review {
   id        String   @id @default(cuid())
   productId String
-  
-  subject   String
-  pfpUrl    String
   name      String
   rating    Int
   comment   String
   approved  Boolean  @default(false)
-
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
+  pfpUrl    String
+  subject   String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 }
 
 model User {
-  id        String @id @default(cuid())
-  email     String @unique
+  id        String    @id @default(cuid())
+  email     String    @unique
   username  String?
   password  String?
-
+  createdAt DateTime  @default(now())
   carts     Cart[]
   orders    Order[]
-
-  createdAt DateTime @default(now())
+  data      UserData?
 }
 
 model Cart {
-  id        String @id @default(cuid())
+  id        String     @id @default(cuid())
   userId    String?
-
-  purchased Boolean @default(false)
-
-  user      User? @relation(fields: [userId], references: [id])
+  purchased Boolean    @default(false)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  user      User?      @relation(fields: [userId], references: [id])
   items     CartItem[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 }
 
 model CartItem {
-  id        String @id @default(cuid())
-  cartId    String
-  productId String
-
-  quantity  Int @default(1)
-
-  cart      Cart @relation(fields: [cartId], references: [id], onDelete: Cascade)
-  product   Product @relation(fields: [productId], references: [id])
+  id         String    @id @default(cuid())
+  cartId     String
+  productId  String
+  quantity   Int       @default(1)
+  userDataId String?
+  cart       Cart      @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product    Product   @relation(fields: [productId], references: [id])
+  userData   UserData? @relation(fields: [userDataId], references: [id])
 }
 
 model Order {
-  id        String @id @default(cuid())
-  userId    String?
-
-  status    String @default("pending")
-  total     Int
-
+  id                      String      @id @default(cuid())
+  userId                  String?
+  status                  String      @default("pending")
+  total                   Int
   stripeCheckoutSessionId String?
   stripePaymentIntentId   String?
-
-  user      User? @relation(fields: [userId], references: [id])
-  items     OrderItem[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt               DateTime    @default(now())
+  updatedAt               DateTime    @updatedAt
+  user                    User?       @relation(fields: [userId], references: [id])
+  items                   OrderItem[]
 }
 
 model OrderItem {
-  id        String @id @default(cuid())
+  id        String  @id @default(cuid())
   orderId   String
   productId String
-
   name      String
   price     Int
   quantity  Int
-
-  order     Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product   Product @relation(fields: [productId], references: [id])
 }
+
 model NewsletterSubscriber {
   id        String   @id @default(cuid())
   email     String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model UserData {
+  id        String     @id @default(cuid())
+  anon_id   String?    @unique
+  createdAt DateTime   @default(now())
+  lastSeen  DateTime   @updatedAt
+  userId    String?    @unique
+  cart      CartItem[]
+  events    Event[]
+  sessions  Session[]
+  user      User?      @relation(fields: [userId], references: [id])
+}
+
+model Session {
+  id          String    @id @default(cuid())
+  userDataId  String
+  source      String?
+  medium      String?
+  campaign    String?
+  referrer    String?
+  landingPage String?
+  startedAt   DateTime  @default(now())
+  endedAt     DateTime?
+  events      Event[]
+  userData    UserData  @relation(fields: [userDataId], references: [id], onDelete: Cascade)
+
+  @@index([userDataId])
+}
+
+model Event {
+  id         String   @id @default(cuid())
+  userDataId String
+  type       String
+  page       String?
+  source     String?
+  campaign   String?
+  medium     String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+  sessionId  String?
+  session    Session? @relation(fields: [sessionId], references: [id])
+  userData   UserData @relation(fields: [userDataId], references: [id], onDelete: Cascade)
+
+  @@index([userDataId])
+  @@index([type])
+  @@index([createdAt])
 }

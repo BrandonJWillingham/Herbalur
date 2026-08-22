@@ -11,7 +11,7 @@ export default function AboutStory() {
         <div className="relative mx-auto w-full max-w-[520px] lg:max-w-none">
           <div className="relative aspect-[4/5] overflow-hidden bg-[#efe6d8]">
             <Image
-              src="/images/founder/sharon.jpg"
+              src="/images/founder/sharon.webp"
               alt="Sharon, founder of Herbalur, speaking at a podium"
               fill
               sizes="(max-width: 1024px) 100vw, 42vw"

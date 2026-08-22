@@ -64,7 +64,7 @@ export default function AboutCallToAction() {
           <div className="grid min-h-full md:grid-cols-[0.95fr_1.05fr] lg:grid-cols-1 xl:grid-cols-[0.95fr_1.05fr]">
             <div className="relative min-h-[390px] md:min-h-[500px] lg:min-h-[440px] xl:min-h-[560px]">
               <Image
-                src="/images/founder/sharon.jpg"
+                src="/images/founder/sharon.webp"
                 alt="Sharon, founder of Herbalur"
                 fill
                 sizes="(max-width: 768px) 100vw, (max-width: 1280px) 45vw, 24vw"

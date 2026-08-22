@@ -46,11 +46,6 @@ const videos = [
     caption:
       "@glowwithtay: I’ve been so impressed by how healthy and refreshed my skin looks.",
   },
-  {
-    src: "/videos/tiktok8.mp4",
-    caption:
-      "@selfcarewithnia: Simple ingredients, a beautiful texture, and results I can actually see.",
-  },
 ];
 
 export default function TikToks() {

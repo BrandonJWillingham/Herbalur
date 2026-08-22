@@ -38,7 +38,7 @@ export default function AboutHero() {
           {/* Image */}
           <div className="relative min-h-[360px] sm:min-h-[480px] lg:absolute lg:inset-0 lg:min-h-0 ">
             <Image
-              src="/images/hero/botanical-Ginger.jpg"
+              src="/images/hero/botanical-Ginger.webp"
               alt="Ginger root and botanical stems arranged in a ceramic bowl"
               fill
               priority
