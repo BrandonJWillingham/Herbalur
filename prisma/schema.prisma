@@ -7,23 +7,43 @@ datasource db {
   provider = "postgresql"
 }
 
+enum EventType {
+  PAGE_VIEW
+  PRODUCT_VIEW
+  CATEGORY_VIEW
+  ADD_TO_CART
+  REMOVE_FROM_CART
+  BEGIN_CHECKOUT
+  PURCHASE
+  NEWSLETTER_SIGNUP
+}
+
+enum CartStatus {
+  ACTIVE
+  MERGED
+  CHECKED_OUT
+  ABANDONED
+}
+
 model Product {
-  id          String         @id @default(cuid())
+  id          String   @id @default(cuid())
   name        String
-  slug        String         @unique
+  slug        String   @unique
   category    String
   buzzWords   String
   description String
   price       Int
   inventory   Int
   imageUrl    String
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
   cartItems   CartItem[]
   orderItems  OrderItem[]
   details     ProductDetail?
   reviews     Review[]
   ingredients Ingredient[]   @relation("IngredientToProduct")
+  events      Event[]
 }
 
 model ProductDetail {
@@ -33,15 +53,17 @@ model ProductDetail {
   highlight2 String
   highlight3 String
   howToUse   String?
-  product    Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 }
 
 model Ingredient {
-  id          String    @id @default(cuid())
-  name        String    @unique
+  id          String  @id @default(cuid())
+  name        String  @unique
   description String
   imageUrl    String?
-  products    Product[] @relation("IngredientToProduct")
+
+  products Product[] @relation("IngredientToProduct")
 }
 
 model Review {
@@ -52,9 +74,10 @@ model Review {
   comment   String
   approved  Boolean  @default(false)
   createdAt DateTime @default(now())
-  pfpUrl    String
-  subject   String
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  pfpUrl    String?
+  subject   String?
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 }
 
 model User {
@@ -63,58 +86,164 @@ model User {
   lastName  String?
 
   email    String? @unique
-  phone    String?
+  phone    String? @unique
   password String?
 
-  createdAt DateTime  @default(now())
-  carts     Cart[]
-  orders    Order[]
-  data      UserData?
+  createdAt DateTime @default(now())
+
+  carts  Cart[]
+  orders Order[]
+  events Event[]
+}
+
+model Visitor {
+  id String @id @default(cuid())
+
+  createdAt  DateTime @default(now())
+  lastSeenAt DateTime @default(now())
+
+  sessions Session[]
+  events   Event[]
+  carts    Cart[]
+  orders   Order[]
+}
+
+model Session {
+  id        String @id @default(cuid())
+  visitorId String
+
+  source      String?
+  medium      String?
+  campaign    String?
+  content     String?
+  referrer    String?
+  landingPage String?
+
+  startedAt  DateTime  @default(now())
+  lastSeenAt DateTime  @default(now())
+  endedAt    DateTime?
+
+  visitor Visitor @relation(fields: [visitorId], references: [id], onDelete: Cascade)
+
+  events Event[]
+  orders Order[]
+
+  @@index([visitorId])
+  @@index([startedAt])
+  @@index([campaign])
+  @@index([source])
+}
+
+model Event {
+  id String @id @default(cuid())
+
+  visitorId String
+  sessionId String?
+  userId    String?
+  productId String?
+
+  type EventType
+
+  page     String?
+  metadata Json?
+
+  createdAt DateTime @default(now())
+
+  visitor Visitor  @relation(fields: [visitorId], references: [id], onDelete: Cascade)
+  session Session? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  user    User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@index([visitorId])
+  @@index([sessionId])
+  @@index([userId])
+  @@index([productId])
+  @@index([type])
+  @@index([createdAt])
 }
 
 model Cart {
-  id        String     @id @default(cuid())
+  id String @id @default(cuid())
+
+  visitorId String?
   userId    String?
-  purchased Boolean    @default(false)
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  user      User?      @relation(fields: [userId], references: [id])
-  items     CartItem[]
+
+  status CartStatus @default(ACTIVE)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  visitor Visitor? @relation(fields: [visitorId], references: [id], onDelete: SetNull)
+  user    User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  items CartItem[]
+  order Order?
+
+  @@index([visitorId])
+  @@index([userId])
+  @@index([status])
 }
 
 model CartItem {
-  id         String    @id @default(cuid())
-  cartId     String
-  productId  String
-  quantity   Int       @default(1)
-  userDataId String?
-  cart       Cart      @relation(fields: [cartId], references: [id], onDelete: Cascade)
-  product    Product   @relation(fields: [productId], references: [id])
-  userData   UserData? @relation(fields: [userDataId], references: [id])
+  id        String @id @default(cuid())
+  cartId    String
+  productId String
+  quantity  Int    @default(1)
+
+  cart    Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+
+  @@unique([cartId, productId])
+  @@index([cartId])
+  @@index([productId])
 }
 
 model Order {
-  id                      String      @id @default(cuid())
-  userId                  String?
-  status                  String      @default("pending")
-  total                   Int
-  stripeCheckoutSessionId String?
-  stripePaymentIntentId   String?
-  createdAt               DateTime    @default(now())
-  updatedAt               DateTime    @updatedAt
-  user                    User?       @relation(fields: [userId], references: [id])
-  items                   OrderItem[]
+  id String @id @default(cuid())
+
+  userId    String?
+  visitorId String?
+  sessionId String?
+  cartId    String? @unique
+
+  customerEmail String?
+
+  status String @default("pending")
+  total  Int
+
+  stripeCheckoutSessionId String? @unique
+  stripePaymentIntentId   String? @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user    User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  visitor Visitor? @relation(fields: [visitorId], references: [id], onDelete: SetNull)
+  session Session? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  cart    Cart?    @relation(fields: [cartId], references: [id], onDelete: SetNull)
+
+  items OrderItem[]
+
+  @@index([userId])
+  @@index([visitorId])
+  @@index([sessionId])
+  @@index([status])
 }
 
 model OrderItem {
-  id        String  @id @default(cuid())
+  id        String @id @default(cuid())
   orderId   String
   productId String
-  name      String
-  price     Int
-  quantity  Int
-  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product   Product @relation(fields: [productId], references: [id])
+
+  name     String
+  price    Int
+  quantity Int
+
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+
+  @@index([orderId])
+  @@index([productId])
 }
 
 model NewsletterSubscriber {
@@ -122,51 +251,4 @@ model NewsletterSubscriber {
   email     String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-}
-
-model UserData {
-  id        String     @id @default(cuid())
-  anon_id   String?    @unique
-  createdAt DateTime   @default(now())
-  lastSeen  DateTime   @updatedAt
-  userId    String?    @unique
-  cart      CartItem[]
-  events    Event[]
-  sessions  Session[]
-  user      User?      @relation(fields: [userId], references: [id])
-}
-
-model Session {
-  id          String    @id @default(cuid())
-  userDataId  String
-  source      String?
-  medium      String?
-  campaign    String?
-  referrer    String?
-  landingPage String?
-  startedAt   DateTime  @default(now())
-  endedAt     DateTime?
-  events      Event[]
-  userData    UserData  @relation(fields: [userDataId], references: [id], onDelete: Cascade)
-
-  @@index([userDataId])
-}
-
-model Event {
-  id         String   @id @default(cuid())
-  userDataId String
-  type       String
-  page       String?
-  source     String?
-  campaign   String?
-  medium     String?
-  metadata   Json?
-  createdAt  DateTime @default(now())
-  sessionId  String?
-  session    Session? @relation(fields: [sessionId], references: [id])
-  userData   UserData @relation(fields: [userDataId], references: [id], onDelete: Cascade)
-
-  @@index([userDataId])
-  @@index([type])
-  @@index([createdAt])
 }
