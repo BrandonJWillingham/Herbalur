@@ -1,8 +1,8 @@
 
-export default function Review({ rating, reviewCount, profilePic, name, subject, description }: { rating: number; reviewCount: number; profilePic?: string; name: string; subject: string; description: string }) {
+export default function Review({ rating, reviewCount, name, subject, description }: { rating: number; reviewCount: number; name: string; subject?: string; description: string }) {
     return (
         <div>
-            <img src={profilePic? profilePic : "/default-profile-pic.jpg"} alt="profile picture" />
+
             <div>
                 <div>
                     <p>{name}</p>

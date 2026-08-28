@@ -245,9 +245,8 @@ export default async function ProductPage({
                   <Review
                     rating={firstReview.rating}
                     reviewCount={reviewCount}
-                    profilePic={firstReview.pfpUrl}
                     name={firstReview.name}
-                    subject={firstReview.subject}
+                    subject={firstReview.subject ?? undefined}
                     description={firstReview.comment}
                   />
                 </div>
