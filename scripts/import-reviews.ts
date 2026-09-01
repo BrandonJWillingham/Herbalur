@@ -11,7 +11,7 @@ type ReviewRow = {
   comment: string;
   approved: string;
   createdAt: string;
-  pfpUrl: string;
+  productUrl: string;
   subject: string;
   productSlug: string;
 };
@@ -65,7 +65,7 @@ async function main() {
         comment: row.comment,
         approved: row.approved.toLowerCase() === "true",
         createdAt: new Date(row.createdAt),
-        pfpUrl: row.pfpUrl || "",
+        productUrl: row.productUrl || "",
         subject: row.subject || "Legacy customer Review",
       },
     });

@@ -1,4 +1,4 @@
-﻿id,productId,name,rating,comment,approved,createdAt,pfpUrl,subject,productSlug
+﻿id,productId,name,rating,comment,approved,createdAt,productUrl,subject,productSlug
 sJgGVJreX,,sharon a.,5,This soap work wonders,TRUE,2024-10-10T01:07:02.263Z,,Verified Purchase,turmeric-kojic-acid-soap
 4Vw4ta2ZE,,marcia j.,5,This soap really helps my dark spot and discoloration,TRUE,2024-10-10T01:14:40.245Z,,Verified Purchase,turmeric-kojic-acid-soap
 fWx5Jzv7R,,Shamara j.,5,You need to get this soap it clears up my acne in 2 weeks,TRUE,2024-10-13T01:09:57.675Z,,Verified Purchase,turmeric-kojic-acid-soap
