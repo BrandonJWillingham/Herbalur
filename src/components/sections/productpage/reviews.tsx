@@ -1,10 +1,13 @@
+"use client";
+
 import { prisma } from "@/lib/prisma";
 import Image from "next/image";
 import { useState } from "react";
 import { ArrowLeftIcon, ArrowRightIcon } from "@/components/Arrows";
 import ReviewStars from "./reviewStars";
 import ReviewGraph from "./reviewGraph";
-"use client";
+
+
 
 type Review = {
     id: string;

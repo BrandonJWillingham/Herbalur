@@ -3,7 +3,7 @@ import AddToCartPanel from "@/components/sections/productpage/AddToCartPanel";
 import ReviewComponent from "@/components/sections/productpage/reviews";
 import { prisma } from "@/lib/prisma";
 import Image from "next/image";
-import {useState} from "react";
+
 
 type ProductPageProps = {
   params: Promise<{
@@ -16,19 +16,36 @@ export default async function ProductPage({
 }: ProductPageProps) {
   const { slug } = await params;
 
-  const product = await prisma.product.findUnique({
-    where: { slug },
-    include: {
-      details: true,
-      ingredients: true,
-      reviews: {
-        where: {
-          approved: true,
+  const [product, reviewStats] = await Promise.all([
+    prisma.product.findUnique({
+      where: { slug },
+      include: {
+        details: true,
+        ingredients: true,
+        reviews: {
+          where: { approved: true },
+          take: 10,
         },
       },
-    },
-  });
-  
+    }),
+
+    prisma.review.aggregate({
+      where: {
+        product: {
+          slug,
+        },
+        approved: true,
+      },
+      _avg: {
+        rating: true,
+      },
+      _count: true,
+    }),
+  ]);
+  const averageRating = reviewStats._avg.rating ?? 0;
+  const reviewCount = reviewStats._count;
+
+
   if (!product) {
     return (
       <main className="flex min-h-[60vh] items-center justify-center bg-[#faf8f4] px-6">
@@ -45,26 +62,7 @@ export default async function ProductPage({
     );
   }
 
-  if (!product) {
-    return (
-      <main className="flex min-h-[60vh] items-center justify-center bg-[#faf8f4] px-6">
-        <div className="text-center">
-          <h1 className="font-serif text-4xl text-[#1f2e22]">
-            Product not found
-          </h1>
-
-          <p className="mt-3 text-sm text-[#68645e]">
-            This product may no longer be available.
-          </p>
-        </div>
-      </main>
-    );
-  }
-
-  const reviewCount = product?.reviews.length ?? 0;
-  const averageRating = product.reviews.reduce((total, review) => total + review.rating, 0) / reviewCount;
-
-
+ 
   return (
     <main className="bg-[#faf8f4] text-[#282924]">
       {/* Breadcrumbs */}
