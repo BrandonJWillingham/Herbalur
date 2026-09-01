@@ -1,10 +1,9 @@
 import IngredientCard from "@/components/cards/Ingredient";
 import AddToCartPanel from "@/components/sections/productpage/AddToCartPanel";
-import ReviewGraph from "@/components/sections/productpage/reviewGraph";
-import ReviewStars from "@/components/sections/productpage/reviewStars";
-import Review from "@/components/sections/productpage/reviews";
+import ReviewComponent from "@/components/sections/productpage/reviews";
 import { prisma } from "@/lib/prisma";
 import Image from "next/image";
+import {useState} from "react";
 
 type ProductPageProps = {
   params: Promise<{
@@ -29,6 +28,22 @@ export default async function ProductPage({
       },
     },
   });
+  
+  if (!product) {
+    return (
+      <main className="flex min-h-[60vh] items-center justify-center bg-[#faf8f4] px-6">
+        <div className="text-center">
+          <h1 className="font-serif text-4xl text-[#1f2e22]">
+            Product not found
+          </h1>
+
+          <p className="mt-3 text-sm text-[#68645e]">
+            This product may no longer be available.
+          </p>
+        </div>
+      </main>
+    );
+  }
 
   if (!product) {
     return (
@@ -46,17 +61,9 @@ export default async function ProductPage({
     );
   }
 
-  const reviewCount = product.reviews.length;
+  const reviewCount = product?.reviews.length ?? 0;
+  const averageRating = product.reviews.reduce((total, review) => total + review.rating, 0) / reviewCount;
 
-  const averageRating =
-    reviewCount > 0
-      ? product.reviews.reduce(
-          (total, review) => total + review.rating,
-          0,
-        ) / reviewCount
-      : 0;
-
-  const firstReview = product.reviews[0];
 
   return (
     <main className="bg-[#faf8f4] text-[#282924]">
@@ -199,74 +206,7 @@ export default async function ProductPage({
       </section>
 
       {/* Reviews begin outside the sticky product grid */}
-      <section className="border-t border-[#dfdbd3] bg-[#f7f4ef]">
-        <div className="mx-auto max-w-7xl px-5 py-14 sm:px-8 lg:px-10 lg:py-20">
-          <div className="grid gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
-            {/* Rating summary */}
-            <div className="lg:border-r lg:border-[#dfdbd3] lg:pr-16">
-              <p className="font-serif text-7xl leading-none text-[#252b25]">
-                {averageRating.toFixed(1)}
-              </p>
-
-              <div className="mt-4">
-                <ReviewStars rating={averageRating} />
-              </div>
-
-              <p className="mt-3 text-sm text-[#5d5a54]">
-                {reviewCount > 0
-                  ? `${averageRating.toFixed(
-                      1,
-                    )}/5 from ${reviewCount} verified ${
-                      reviewCount === 1 ? "review" : "reviews"
-                    }`
-                  : "No reviews yet"}
-              </p>
-
-              <div className="mt-8">
-                <ReviewGraph reviews={product.reviews} />
-              </div>
-            </div>
-
-            {/* Featured review */}
-            <div>
-              <div className="flex items-center justify-between">
-                <SectionHeading>Customer Reviews</SectionHeading>
-
-                {reviewCount > 0 && (
-                  <span className="rounded-full border border-[#d7d2ca] px-4 py-2 text-xs text-[#66625c]">
-                    {reviewCount}{" "}
-                    {reviewCount === 1 ? "review" : "reviews"}
-                  </span>
-                )}
-              </div>
-
-              {firstReview ? (
-                <div className="mt-8">
-                  <Review
-                    rating={firstReview.rating}
-                    reviewCount={reviewCount}
-                    name={firstReview.name}
-                    subject={firstReview.subject ?? undefined}
-                    description={firstReview.comment}
-                  />
-                </div>
-              ) : (
-                <div className="mt-8 rounded-xl border border-[#dfdbd3] bg-[#fcfaf7] p-8">
-                  <h3 className="font-serif text-2xl text-[#26432c]">
-                    Be the first to review
-                  </h3>
-
-                  <p className="mt-3 max-w-lg text-sm leading-6 text-[#65615b]">
-                    Share your experience with this product and help
-                    future customers find the right addition to their
-                    routine.
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </section>
+              <ReviewComponent reviews={product.reviews} />
     </main>
   );
 }

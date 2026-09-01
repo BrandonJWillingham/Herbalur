@@ -9,7 +9,7 @@ export default async function Dashboard() {
     events,
     pageViews,
   ] = await Promise.all([
-    prisma.userData.count(),
+    prisma.user.count(),
     prisma.event.count(),
     prisma.event.count({
       where: {
