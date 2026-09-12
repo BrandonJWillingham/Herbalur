@@ -11,35 +11,94 @@ type CartRequestItem = {
 
 const MAX_ITEM_QUANTITY = 20;
 
+/**
+ * Returns the base URL for redirects.
+ *
+ * Priority:
+ * 1. SITE_URL
+ * 2. NEXT_PUBLIC_SITE_URL
+ * 3. Vercel deployment URL
+ * 4. localhost during development
+ */
 function getSiteUrl() {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  const configuredUrl =
+    process.env.SITE_URL ??
+    process.env.NEXT_PUBLIC_SITE_URL;
 
-  if (!siteUrl) {
-    throw new Error("NEXT_PUBLIC_SITE_URL is not configured.");
+  if (configuredUrl) {
+    return configuredUrl.replace(/\/$/, "");
   }
 
-  // Prevent accidental double slashes in redirect/image URLs.
-  return siteUrl.replace(/\/$/, "");
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`.replace(/\/$/, "");
+  }
+
+  return "http://localhost:3000";
 }
 
-function getAbsoluteImageUrl(imageUrl: string | null, siteUrl: string) {
+/**
+ * Stripe product images must use absolute URLs.
+ *
+ * During local development, Stripe cannot retrieve images from localhost,
+ * so local image paths are omitted from the Checkout Session.
+ */
+function getAbsoluteImageUrl(
+  imageUrl: string | null,
+  siteUrl: string
+): string | undefined {
   if (!imageUrl) {
     return undefined;
   }
 
-  // Stripe requires publicly accessible absolute image URLs.
-  if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) {
+  // Already publicly hosted.
+  if (
+    imageUrl.startsWith("http://") ||
+    imageUrl.startsWith("https://")
+  ) {
     return imageUrl;
   }
 
-  return `${siteUrl}${imageUrl.startsWith("/") ? imageUrl : `/${imageUrl}`}`;
+  // Stripe cannot access localhost assets.
+  if (
+    siteUrl.includes("localhost") ||
+    siteUrl.includes("127.0.0.1")
+  ) {
+    return undefined;
+  }
+
+  const normalizedPath = imageUrl.startsWith("/")
+    ? imageUrl
+    : `/${imageUrl}`;
+
+  return `${siteUrl}${normalizedPath}`;
 }
 
 export async function POST(req: NextRequest) {
   try {
     const siteUrl = getSiteUrl();
-    const body: unknown = await req.json();
 
+    /*
+     * Parse JSON separately so bad JSON returns 400
+     * instead of falling into the general 500 handler.
+     */
+    let body: unknown;
+
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json(
+        {
+          error: "Invalid checkout request.",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
+
+    /*
+     * Validate basic request shape.
+     */
     if (
       !body ||
       typeof body !== "object" ||
@@ -47,8 +106,12 @@ export async function POST(req: NextRequest) {
       !Array.isArray(body.cart)
     ) {
       return NextResponse.json(
-        { error: "Invalid checkout request." },
-        { status: 400 }
+        {
+          error: "Invalid checkout request.",
+        },
+        {
+          status: 400,
+        }
       );
     }
 
@@ -56,16 +119,26 @@ export async function POST(req: NextRequest) {
 
     if (rawCart.length === 0) {
       return NextResponse.json(
-        { error: "Your cart is empty." },
-        { status: 400 }
+        {
+          error: "Your cart is empty.",
+        },
+        {
+          status: 400,
+        }
       );
     }
 
     /*
-     * Validate the client input.
+     * Validate every cart item.
      *
-     * We trust the client to send product IDs and quantities,
-     * but we never trust client-side names, inventory, or prices.
+     * The client is allowed to tell us:
+     * - which product
+     * - how many
+     *
+     * The client is NOT trusted to tell us:
+     * - price
+     * - product name
+     * - inventory
      */
     const validatedCart: CartRequestItem[] = [];
 
@@ -77,8 +150,12 @@ export async function POST(req: NextRequest) {
         !("quantity" in item)
       ) {
         return NextResponse.json(
-          { error: "One or more cart items are invalid." },
-          { status: 400 }
+          {
+            error: "One or more cart items are invalid.",
+          },
+          {
+            status: 400,
+          }
         );
       }
 
@@ -97,7 +174,9 @@ export async function POST(req: NextRequest) {
           {
             error: `Each cart quantity must be between 1 and ${MAX_ITEM_QUANTITY}.`,
           },
-          { status: 400 }
+          {
+            status: 400,
+          }
         );
       }
 
@@ -110,32 +189,50 @@ export async function POST(req: NextRequest) {
     /*
      * Combine duplicate product IDs.
      *
-     * This prevents someone from bypassing the quantity limit by sending
-     * the same product multiple times in the request.
+     * Example:
+     *
+     * [
+     *   { id: "abc", quantity: 10 },
+     *   { id: "abc", quantity: 15 }
+     * ]
+     *
+     * should NOT bypass our 20-unit limit.
      */
     const quantityByProductId = new Map<string, number>();
 
     for (const item of validatedCart) {
-      const existingQuantity = quantityByProductId.get(item.id) ?? 0;
-      const combinedQuantity = existingQuantity + item.quantity;
+      const existingQuantity =
+        quantityByProductId.get(item.id) ?? 0;
+
+      const combinedQuantity =
+        existingQuantity + item.quantity;
 
       if (combinedQuantity > MAX_ITEM_QUANTITY) {
         return NextResponse.json(
           {
             error: `You may purchase no more than ${MAX_ITEM_QUANTITY} units of one product at a time.`,
           },
-          { status: 400 }
+          {
+            status: 400,
+          }
         );
       }
 
-      quantityByProductId.set(item.id, combinedQuantity);
+      quantityByProductId.set(
+        item.id,
+        combinedQuantity
+      );
     }
 
-    const productIds = Array.from(quantityByProductId.keys());
+    const productIds = Array.from(
+      quantityByProductId.keys()
+    );
 
     /*
-     * Load the authoritative product information from PostgreSQL.
-     * Prices sent from the browser are intentionally ignored.
+     * Load authoritative product data from PostgreSQL.
+     *
+     * This prevents users from changing the price in
+     * their browser before sending the checkout request.
      */
     const products = await prisma.product.findMany({
       where: {
@@ -143,6 +240,7 @@ export async function POST(req: NextRequest) {
           in: productIds,
         },
       },
+
       select: {
         id: true,
         name: true,
@@ -154,7 +252,7 @@ export async function POST(req: NextRequest) {
     });
 
     /*
-     * Every requested product must exist.
+     * Every requested product must still exist.
      */
     if (products.length !== productIds.length) {
       return NextResponse.json(
@@ -162,21 +260,31 @@ export async function POST(req: NextRequest) {
           error:
             "One or more products in your cart are no longer available. Please refresh your cart.",
         },
-        { status: 400 }
+        {
+          status: 400,
+        }
       );
     }
 
+    /*
+     * Build Stripe line items using DATABASE prices.
+     */
     const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] =
       products.map((product) => {
-        const quantity = quantityByProductId.get(product.id);
+        const quantity =
+          quantityByProductId.get(product.id);
 
         if (!quantity) {
-          throw new Error(`Missing cart quantity for product ${product.id}.`);
+          throw new Error(
+            `Missing cart quantity for product ${product.id}.`
+          );
         }
 
         /*
-         * Check current inventory before creating Checkout.
-         * Inventory should also be checked/reduced in the webhook later.
+         * Check stock before sending the customer to Stripe.
+         *
+         * Your webhook should still perform the final
+         * inventory handling after successful payment.
          */
         if (product.inventory < quantity) {
           throw new Error(
@@ -184,16 +292,24 @@ export async function POST(req: NextRequest) {
           );
         }
 
-        const absoluteImageUrl = getAbsoluteImageUrl(
-          product.imageUrl,
-          siteUrl
-        );
+        const absoluteImageUrl =
+          getAbsoluteImageUrl(
+            product.imageUrl,
+            siteUrl
+          );
 
         return {
           quantity,
 
           price_data: {
             currency: "usd",
+
+            /*
+             * Your Product.price is stored in cents.
+             *
+             * Example:
+             * 2500 = $25.00
+             */
             unit_amount: product.price,
 
             product_data: {
@@ -203,11 +319,13 @@ export async function POST(req: NextRequest) {
                 ? product.description.slice(0, 500)
                 : undefined,
 
-              images: absoluteImageUrl ? [absoluteImageUrl] : undefined,
+              images: absoluteImageUrl
+                ? [absoluteImageUrl]
+                : undefined,
 
               /*
-               * This makes the internal Prisma product ID available
-               * when Stripe returns the completed line item later.
+               * Preserve the Prisma Product ID
+               * in Stripe.
                */
               metadata: {
                 productId: product.id,
@@ -218,100 +336,138 @@ export async function POST(req: NextRequest) {
       });
 
     /*
-     * Stripe Checkout collects:
-     * - Customer email
-     * - Customer name
-     * - Shipping address
-     * - Phone number
-     * - Payment information
+     * Create Stripe Checkout Session.
+     *
+     * IMPORTANT:
+     *
+     * We use:
+     *
+     * customer_creation: "always"
+     *
+     * We DO NOT use customer_update here.
+     *
+     * customer_update is only valid if we provide an
+     * existing Stripe customer:
+     *
+     * customer: "cus_..."
      */
-    const session = await stripe.checkout.sessions.create({
-      mode: "payment",
+    const session =
+      await stripe.checkout.sessions.create({
+        mode: "payment",
 
-      payment_method_types: ["card"],
+        payment_method_types: ["card"],
 
-      line_items: lineItems,
+        line_items: lineItems,
 
-      /*
-       * Create a reusable Stripe Customer containing the details
-       * entered during Checkout.
-       */
-      customer_creation: "always",
+        /*
+         * Stripe creates a Customer after checkout.
+         *
+         * This lets you associate repeat purchases
+         * with Stripe customers later.
+         */
+        customer_creation: "always",
 
-      billing_address_collection: "auto",
+        /*
+         * Stripe will collect the customer's email
+         * during Checkout.
+         */
 
-      shipping_address_collection: {
-        // Herbalur currently ships within the United States.
-        allowed_countries: ["US"],
-      },
+        billing_address_collection: "auto",
 
-      phone_number_collection: {
-        enabled: true,
-      },
-
-      /*
-       * Ask Stripe to collect and save the customer's name.
-       */
-      customer_update: {
-        name: "auto",
-        address: "auto",
-        shipping: "auto",
-      },
-
-      /*
-       * This text appears near the Checkout submit button.
-       */
-      custom_text: {
-        submit: {
-          message:
-            "Your shipping details will be used to prepare and deliver your Herbalur order.",
+        /*
+         * Collect the shipping address.
+         */
+        shipping_address_collection: {
+          allowed_countries: ["US"],
         },
-      },
 
-      /*
-       * The success page is only for the customer experience.
-       * The webhook will be responsible for creating and fulfilling the order.
-       */
-      success_url: `${siteUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
+        /*
+         * Collect customer's phone number.
+         */
+        phone_number_collection: {
+          enabled: true,
+        },
 
-      /*
-       * You are using a cart drawer instead of a dedicated cart page,
-       * so canceling returns the customer to the website.
-       */
-      cancel_url: `${siteUrl}/`,
+        /*
+         * Customer-facing message near the payment button.
+         */
+        custom_text: {
+          submit: {
+            message:
+              "Your shipping details will be used to prepare and deliver your Herbalur order.",
+          },
+        },
 
-      metadata: {
-        source: "herbalur-cart",
-      },
-    });
+        /*
+         * Stripe replaces this placeholder with
+         * the actual Checkout Session ID.
+         */
+        success_url:
+          `${siteUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
+
+        /*
+         * Herbalur uses a cart drawer, so returning
+         * to the homepage makes sense when checkout
+         * is canceled.
+         */
+        cancel_url: `${siteUrl}/`,
+
+        /*
+         * Session-level metadata.
+         */
+        metadata: {
+          source: "herbalur-cart",
+        },
+      });
 
     if (!session.url) {
-      throw new Error("Stripe did not return a Checkout URL.");
+      throw new Error(
+        "Stripe did not return a Checkout URL."
+      );
     }
 
     return NextResponse.json({
       url: session.url,
     });
   } catch (error) {
-    console.error("Checkout session error:", error);
+    console.error(
+      "Checkout session error:",
+      error
+    );
 
+    /*
+     * Give the frontend a useful inventory message.
+     */
     if (
       error instanceof Error &&
-      error.message.startsWith("INSUFFICIENT_INVENTORY:")
+      error.message.startsWith(
+        "INSUFFICIENT_INVENTORY:"
+      )
     ) {
-      const [, productName, remainingInventory] = error.message.split(":");
+      const [
+        ,
+        productName,
+        remainingInventory,
+      ] = error.message.split(":");
 
       return NextResponse.json(
         {
           error: `${productName} only has ${remainingInventory} remaining in stock.`,
         },
-        { status: 409 }
+        {
+          status: 409,
+        }
       );
     }
 
+    /*
+     * Don't expose Stripe/database internals
+     * directly to the customer.
+     */
     return NextResponse.json(
       {
-        error: "Unable to begin checkout. Please try again.",
+        error:
+          "Unable to begin checkout. Please try again.",
       },
       {
         status: 500,

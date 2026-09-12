@@ -1,6 +1,5 @@
 "use client";
 
-import { prisma } from "@/lib/prisma";
 import Image from "next/image";
 import { useState } from "react";
 import { ArrowLeftIcon, ArrowRightIcon } from "@/components/Arrows";
@@ -22,7 +21,7 @@ type ReviewComponentProps = {
     reviews: Review[];
 };
 
-export default async function ReviewComponent({reviews} : ReviewComponentProps) {
+export default function ReviewComponent({reviews} : ReviewComponentProps) {
     const [reviewIndex, setReviewIndex] = useState(0);
 
 
@@ -96,15 +95,15 @@ export default async function ReviewComponent({reviews} : ReviewComponentProps) 
                 </button>
 
 
-                {reviews ? (
+                {reviewCount > 0 && review ? (
                 <div className="mt-8">
                     <ReviewCard
-                    rating={reviews[reviewIndex]?.rating}
+                    rating={review.rating}
                     reviewCount={reviewCount}
-                    name={reviews[reviewIndex]?.name}
-                    subject={reviews[reviewIndex]?.subject ?? undefined}
-                    description={reviews[reviewIndex]?.comment}
-                    image={reviews[reviewIndex]?.productUrl ? reviews[reviewIndex]?.productUrl : undefined}
+                    name={review.name}
+                    subject={review.subject ?? undefined}
+                    description={review.comment}
+                    image={review.productUrl ? review.productUrl : undefined}
                     />
                 </div>
                 ) : (
@@ -133,7 +132,7 @@ function ReviewCard({ rating, reviewCount, name, subject, description, image }: 
             <div>
                 <div>
                     <p>{name}</p>
-                    <p>Rating: {rating} ({reviewCount} reviews)</p>                    
+                    <ReviewStars rating={rating} />
                 </div>
                 <h4>{subject? subject : "No subject"}</h4>
                 <p> {description}</p>

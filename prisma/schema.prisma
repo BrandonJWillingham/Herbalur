@@ -67,15 +67,15 @@ model Ingredient {
 }
 
 model Review {
-  id        String   @id @default(cuid())
-  productId String
-  name      String
-  rating    Int
-  comment   String
-  approved  Boolean  @default(false)
-  createdAt DateTime @default(now())
+  id         String   @id @default(cuid())
+  productId  String
+  name       String
+  rating     Int
+  comment    String
+  approved   Boolean  @default(false)
+  createdAt  DateTime @default(now())
   productUrl String?
-  subject   String?
+  subject    String?
 
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 }
@@ -198,38 +198,6 @@ model CartItem {
   @@index([productId])
 }
 
-model Order {
-  id String @id @default(cuid())
-
-  userId    String?
-  visitorId String?
-  sessionId String?
-  cartId    String? @unique
-
-  customerEmail String?
-
-  status String @default("pending")
-  total  Int
-
-  stripeCheckoutSessionId String? @unique
-  stripePaymentIntentId   String? @unique
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user    User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
-  visitor Visitor? @relation(fields: [visitorId], references: [id], onDelete: SetNull)
-  session Session? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
-  cart    Cart?    @relation(fields: [cartId], references: [id], onDelete: SetNull)
-
-  items OrderItem[]
-
-  @@index([userId])
-  @@index([visitorId])
-  @@index([sessionId])
-  @@index([status])
-}
-
 model OrderItem {
   id        String @id @default(cuid())
   orderId   String
@@ -251,4 +219,64 @@ model NewsletterSubscriber {
   email     String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Order {
+  id String @id @default(cuid())
+
+  userId    String?
+  visitorId String?
+  sessionId String?
+  cartId    String? @unique
+
+  customerEmail String?
+
+  status String @default("pending")
+  total  Int
+
+  stripeCheckoutSessionId String? @unique
+  stripePaymentIntentId   String? @unique
+
+  // No fields/references here
+  shipping ShippingLabel?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user    User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  visitor Visitor? @relation(fields: [visitorId], references: [id], onDelete: SetNull)
+  session Session? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  cart    Cart?    @relation(fields: [cartId], references: [id], onDelete: SetNull)
+
+  items OrderItem[]
+
+  @@index([userId])
+  @@index([visitorId])
+  @@index([sessionId])
+  @@index([status])
+}
+
+model ShippingLabel {
+  id String @id @default(cuid())
+
+  // @unique makes this a one-to-one relationship
+  orderId String @unique
+
+  // ShippingLabel owns the foreign key
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  shippoTransactionId String @unique
+
+  labelUrl       String
+  trackingNumber String?
+  trackingUrl    String?
+
+  carrier      String?
+  serviceLevel String?
+
+  shippingCost Int?
+
+  status String
+
+  createdAt DateTime @default(now())
 }
