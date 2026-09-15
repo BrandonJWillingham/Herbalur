@@ -42,15 +42,21 @@ export async function createAdminSession() {
 
 export async function isAdmin(): Promise<boolean> {
   const cookieStore = await cookies();
-
   const token = cookieStore.get(COOKIE_NAME)?.value;
 
   if (!token) {
     return false;
   }
 
+  const sessionSecret = process.env.ADMIN_SESSION_SECRET;
+
+  if (!sessionSecret) {
+    console.error("ADMIN_SESSION_SECRET is not configured.");
+    return false;
+  }
+
   try {
-    const secret = getSessionSecret();
+    const secret = new TextEncoder().encode(sessionSecret);
 
     const { payload } = await jwtVerify(token, secret);
 
@@ -59,7 +65,6 @@ export async function isAdmin(): Promise<boolean> {
     return false;
   }
 }
-
 export async function requireAdmin() {
   const authenticated = await isAdmin();
 

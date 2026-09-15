@@ -132,7 +132,7 @@ function ReviewCard({ rating, reviewCount, name, subject, description, image }: 
             <div>
                 <div>
                     <p>{name}</p>
-                    <ReviewStars rating={rating} />
+                    <ReviewStars rating={rating} /  >
                 </div>
                 <h4>{subject? subject : "No subject"}</h4>
                 <p> {description}</p>
