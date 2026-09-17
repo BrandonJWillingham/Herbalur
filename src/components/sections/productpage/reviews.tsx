@@ -99,7 +99,6 @@ export default function ReviewComponent({reviews} : ReviewComponentProps) {
                 <div className="mt-8">
                     <ReviewCard
                     rating={review.rating}
-                    reviewCount={reviewCount}
                     name={review.name}
                     subject={review.subject ?? undefined}
                     description={review.comment}
@@ -125,25 +124,103 @@ export default function ReviewComponent({reviews} : ReviewComponentProps) {
         </section>
     );
 }
+type ReviewCardProps = {
+  rating: number;
+  name: string;
+  subject?: string;
+  description: string;
+  image?: string;
+};
 
-function ReviewCard({ rating, reviewCount, name, subject, description, image }: { rating: number; reviewCount: number; name: string; subject?: string; description: string; image: string | undefined }) {
-    return (
-              <div>
-            <div>
-                <div>
-                    <p>{name}</p>
-                    <ReviewStars rating={rating} /  >
-                </div>
-                <h4>{subject? subject : "No subject"}</h4>
-                <p> {description}</p>
-                {image && (
-                    <Image src={image} alt={`Review by ${name}`} className="mt-4" />
-                )}
-            </div>
-            
+function ReviewCard({
+  rating,
+  name,
+  subject,
+  description,
+  image,
+}: ReviewCardProps) {
+  return (
+    <article
+      className="
+        rounded-2xl
+        border border-[#ded9d0]
+        bg-white/60
+        p-5
+        shadow-[0_3px_14px_rgba(0,0,0,0.03)]
+        sm:p-6
+      "
+    >
+      {/* Reviewer */}
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex items-center gap-3">
+          {/* Initial avatar */}
+          <div
+            className="
+              flex h-11 w-11 shrink-0
+              items-center justify-center
+              rounded-full
+              bg-[#e9eee8]
+              font-serif
+              text-lg
+              text-[#285437]
+            "
+          >
+            {name.charAt(0).toUpperCase()}
+          </div>
+
+          <div>
+            <p className="text-sm font-semibold text-[#292d29]">
+              {name}
+            </p>
+
+            <p className="mt-0.5 text-xs text-[#757067]">
+              Verified Purchase
+            </p>
+          </div>
         </div>
-    );
+
+        {/* Rating */}
+        <div className="shrink-0">
+          <ReviewStars rating={rating} />
+        </div>
+      </div>
+
+      {/* Review */}
+      <div className="mt-5">
+        {subject && (
+          <h4 className="font-serif text-lg text-[#244f32]">
+            {subject}
+          </h4>
+        )}
+
+        <p
+          className={`
+            text-[15px]
+            leading-7
+            text-[#514e48]
+            ${subject ? "mt-2" : ""}
+          `}
+        >
+          {description}
+        </p>
+      </div>
+
+      {/* Customer image */}
+      {image && (
+        <div className="relative mt-5 h-32 w-32 overflow-hidden rounded-xl bg-[#eee9e1]">
+          <Image
+            src={image}
+            alt={`Review by ${name}`}
+            fill
+            sizes="128px"
+            className="object-cover"
+          />
+        </div>
+      )}
+    </article>
+  );
 }
+
 type SectionHeadingProps = {
   children: React.ReactNode;
 };

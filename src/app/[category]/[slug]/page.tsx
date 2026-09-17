@@ -1,5 +1,6 @@
 import IngredientCard from "@/components/cards/Ingredient";
 import AddToCartPanel from "@/components/sections/productpage/AddToCartPanel";
+import MobilePurchaseBar from "@/components/sections/productpage/MobilePurchaseBar";
 import ReviewComponent from "@/components/sections/productpage/reviews";
 import { prisma } from "@/lib/prisma";
 import Image from "next/image";
@@ -64,7 +65,7 @@ export default async function ProductPage({
 
  
   return (
-    <main className="bg-[#faf8f4] text-[#282924]">
+    <main className="bg-[#faf8f4] pb-28 text-[#282924] lg:pb-0">
       {/* Breadcrumbs */}
       <div className="border-b border-[#dfdbd3]">
         <div className="mx-auto max-w-7xl px-5 py-5 sm:px-8 lg:px-10">
@@ -185,7 +186,7 @@ export default async function ProductPage({
           </div>
 
           {/* Sticky product purchasing panel */}
-          <aside className="lg:sticky lg:top-28">
+          <aside className="hidden lg:sticky lg:top-28 lg:block">
             <AddToCartPanel
               product={{
                 id: product.id,
@@ -202,6 +203,20 @@ export default async function ProductPage({
           </aside>
         </div>
       </section>
+
+    <MobilePurchaseBar
+      product={{
+        id: product.id,
+        name: product.name,
+        slug: product.slug,
+        price: product.price,
+        imageUrl: product.imageUrl,
+      }}
+      description={product.description}
+      buzzWords={product.buzzWords}
+      averageRating={averageRating}
+      reviewCount={reviewCount}
+    />
 
       {/* Reviews begin outside the sticky product grid */}
               <ReviewComponent reviews={product.reviews} />

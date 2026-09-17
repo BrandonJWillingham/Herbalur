@@ -36,6 +36,25 @@ export default async function ProtectedAdminLayout({
               >
                 Orders
               </Link>
+
+                <Link
+                href="/admin/products"
+                className="text-sm text-[#555851] hover:text-[#26432c]"
+              >
+                Products
+              </Link>
+                <Link
+                href="/admin/analytics"
+                className="text-sm text-[#555851] hover:text-[#26432c]"
+              >
+                Analytics
+              </Link>
+                <Link
+                href="/admin/customers"
+                className="text-sm text-[#555851] hover:text-[#26432c]"
+              >
+                Customers
+              </Link>
             </nav>
           </div>
 
