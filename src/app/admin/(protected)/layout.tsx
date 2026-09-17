@@ -3,6 +3,29 @@ import Link from "next/link";
 import { requireAdmin } from "@/lib/admin-auth";
 import { logoutAdmin } from "../login/actions";
 
+const adminLinks = [
+  {
+    href: "/admin",
+    label: "Dashboard",
+  },
+  {
+    href: "/admin/orders",
+    label: "Orders",
+  },
+  {
+    href: "/admin/products",
+    label: "Products",
+  },
+  {
+    href: "/admin/analytics",
+    label: "Analytics",
+  },
+  {
+    href: "/admin/customers",
+    label: "Customers",
+  },
+];
+
 export default async function ProtectedAdminLayout({
   children,
 }: {
@@ -11,52 +34,16 @@ export default async function ProtectedAdminLayout({
   await requireAdmin();
 
   return (
-    <div className="min-h-screen bg-[#f7f4ef] pt-1">
+    <div className="min-h-screen bg-[#f7f4ef]">
       <header className="border-b border-[#dfdbd3] bg-white">
+        {/* Top header */}
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 sm:px-8">
-          <div className="flex items-center gap-8">
-            <Link
-              href="/admin"
-              className="font-serif text-2xl text-[#26432c]"
-            >
-              Herbalur Admin
-            </Link>
-
-            <nav className="hidden items-center gap-5 md:flex">
-              <Link
-                href="/admin"
-                className="text-sm text-[#555851] hover:text-[#26432c]"
-              >
-                Dashboard
-              </Link>
-
-              <Link
-                href="/admin/orders"
-                className="text-sm text-[#555851] hover:text-[#26432c]"
-              >
-                Orders
-              </Link>
-
-                <Link
-                href="/admin/products"
-                className="text-sm text-[#555851] hover:text-[#26432c]"
-              >
-                Products
-              </Link>
-                <Link
-                href="/admin/analytics"
-                className="text-sm text-[#555851] hover:text-[#26432c]"
-              >
-                Analytics
-              </Link>
-                <Link
-                href="/admin/customers"
-                className="text-sm text-[#555851] hover:text-[#26432c]"
-              >
-                Customers
-              </Link>
-            </nav>
-          </div>
+          <Link
+            href="/admin"
+            className="font-serif text-2xl text-[#26432c]"
+          >
+            Herbalur Admin
+          </Link>
 
           <form action={logoutAdmin}>
             <button
@@ -67,11 +54,26 @@ export default async function ProtectedAdminLayout({
             </button>
           </form>
         </div>
+
+        {/* Admin navigation */}
+        <div className="border-t border-[#ece8e1]">
+          <nav className="mx-auto flex max-w-7xl items-center gap-2 overflow-x-auto px-5 py-2 sm:px-8">
+            {adminLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="shrink-0 rounded-lg px-3 py-2 text-sm font-medium text-[#555851] transition hover:bg-[#f7f4ef] hover:text-[#26432c]"
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+        </div>
       </header>
 
-      <div className="mx-auto max-w-7xl px-5 py-8 sm:px-8 lg:py-10">
+      <main className="mx-auto max-w-7xl px-5 py-8 sm:px-8 lg:py-10">
         {children}
-      </div>
+      </main>
     </div>
   );
 }
