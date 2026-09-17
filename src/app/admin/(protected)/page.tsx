@@ -367,7 +367,7 @@ export default async function AdminDashboardPage() {
           </Link>
 
           <Link
-            href="/admin/inventory"
+            href="/admin/products"
             className="group rounded-xl border border-[#dfdbd3] bg-white p-5 transition hover:border-[#26432c]"
           >
             <p className="font-medium text-[#343630]">
