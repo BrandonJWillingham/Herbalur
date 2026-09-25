@@ -15,6 +15,8 @@ export type CartItem = {
 type CartStore = {
   cart: CartItem[];
   isCartOpen: boolean;
+  shippingPrice: number;
+  tax: number;
 
   openCart: () => void;
   closeCart: () => void;
@@ -35,6 +37,8 @@ export const useCartStore = create<CartStore>()(
     (set, get) => ({
       cart: [],
       isCartOpen: false,
+      shippingPrice: 0,
+      tax: 0,
 
       openCart: () => set({ isCartOpen: true }),
       closeCart: () => set({ isCartOpen: false }),
@@ -91,9 +95,9 @@ export const useCartStore = create<CartStore>()(
 
       clearCart: () => set({ cart: [] }),
 
-      getTotalItems: () =>
-        get().cart.reduce((total, item) => total + item.quantity, 0),
-
+      getTotalItems: () => {
+        return get().cart.reduce((total, item) => total + item.quantity, 0);
+      },
       getSubtotal: () =>
         get().cart.reduce(
           (total, item) => total + item.price * item.quantity,
