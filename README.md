@@ -10,6 +10,8 @@ This project was designed as a production-ready commerce platform rather than a 
 
 All product photography featured throughout the platform was shot and edited by me, with limited use of AI-assisted tools.
 
+herbalur.com herbalur.vercel.app
+
 ## Built With
 
 [![Next.js][Next.js]][Next-url]
